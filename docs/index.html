@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Radar Rhema</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --ink:#18212f; --muted:#5d6878; --line:#dfe4eb;
+  --brand:#14365d; --brand-2:#1f5d99; --accent:#e8792b;
+  --obras:#1f5d99; --limpeza:#2f8a4f; --mao:#8a4fb0;
+  --red:#c8372d; --amber:#b7791f; --chip:#eef2f7; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1520; --card:#172030; --ink:#e7ecf3; --muted:#9aa6b6; --line:#2a3546;
+  --brand:#0c1e35; --brand-2:#5b9be0; --accent:#f0954f;
+  --obras:#5b9be0; --limpeza:#5cc27f; --mao:#b98ad8;
+  --red:#ff6b5f; --amber:#e3a94b; --chip:#223047; --shadow:none;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1520; --card:#172030; --ink:#e7ecf3; --muted:#9aa6b6; --line:#2a3546;
+  --brand:#0c1e35; --brand-2:#5b9be0; --accent:#f0954f;
+  --obras:#5b9be0; --limpeza:#5cc27f; --mao:#b98ad8;
+  --red:#ff6b5f; --amber:#e3a94b; --chip:#223047; --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--brand);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:1000}
+header h1{font-size:18px;margin:0;letter-spacing:.2px}
+header h1 span{color:var(--accent)}
+.stamp{font-size:12px;opacity:.85}
+header .grow{flex:1}
+header button{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit}
+.tabs{display:flex;gap:6px;padding:10px 16px 0;flex-wrap:wrap;max-width:1400px;margin:0 auto}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit}
+.tab b{margin-left:6px;color:var(--muted);font-weight:600}
+.tab.on{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.tab.on b{color:#fff}
+.wrap{display:grid;grid-template-columns:270px 1fr;gap:16px;padding:12px 16px 40px;max-width:1400px;margin:0 auto}
+aside{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;align-self:start;position:sticky;top:64px;max-height:calc(100vh - 80px);overflow:auto;box-shadow:var(--shadow)}
+aside h3{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:14px 0 6px}
+aside h3:first-child{margin-top:0}
+input[type=text],input[type=number],select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.row{display:flex;gap:6px}
+label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
+.range{display:flex;align-items:center;gap:8px}
+.range input{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit}
+.btn.full{width:100%;margin-top:10px}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.toolbar .count{font-weight:600}
+.toolbar .grow{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--ink);padding:6px 12px;cursor:pointer;font:inherit}
+.seg button.on{background:var(--brand-2);color:#fff}
+.list{display:grid;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid var(--obras)}
+.card.limpeza_urbana{border-left-color:var(--limpeza)}
+.card.mao_de_obra{border-left-color:var(--mao)}
+.card.descartada{opacity:.45}
+.top{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.tag{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--ink);white-space:nowrap}
+.tag.t-obras{background:var(--obras);color:#fff}
+.tag.t-limpeza_urbana{background:var(--limpeza);color:#fff}
+.tag.t-mao_de_obra{background:var(--mao);color:#fff}
+.tag.novo{background:var(--accent);color:#fff;font-weight:600}
+.tag.prazo{font-weight:600}
+.tag.prazo.r{background:var(--red);color:#fff}
+.tag.prazo.a{background:var(--amber);color:#fff}
+.obj{font-weight:600;margin:2px 0 6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card.aberto .obj{-webkit-line-clamp:unset}
+.meta{color:var(--muted);font-size:13px;display:flex;gap:4px 14px;flex-wrap:wrap}
+.meta b{color:var(--ink);font-weight:600}
+.alert{margin-top:8px;font-size:12.5px;background:color-mix(in srgb,var(--amber) 14%,transparent);border-left:3px solid var(--amber);padding:5px 8px;border-radius:6px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.acts a,.acts button{font-size:12.5px;text-decoration:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:5px 9px;cursor:pointer;font-family:inherit}
+.acts .fav.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#mapa{height:calc(100vh - 170px);min-height:420px;border-radius:12px;border:1px solid var(--line)}
+.vazio{padding:40px;text-align:center;color:var(--muted);background:var(--card);border-radius:12px;border:1px dashed var(--line)}
+.mais{margin:12px auto 0;display:block}
+.filtros-btn{display:none}
+@media (max-width:860px){
+  .wrap{grid-template-columns:1fr;padding:10px 16px 40px}
+  aside{position:fixed;inset:0 0 0 auto;width:min(340px,92vw);max-height:none;top:0;border-radius:0;z-index:2000;transform:translateX(105%);transition:transform .2s}
+  aside.open{transform:none}
+  .filtros-btn{display:inline-block}
+  .tabs{padding:10px 16px 0}
+  #mapa{height:65vh}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Radar <span>Rhema</span></h1>
+  <div class="stamp" id="stamp">carregando…</div>
+  <div class="grow"></div>
+  <button class="filtros-btn" id="abrirFiltros">Filtros</button>
+  <button id="tema" title="Claro/escuro">◐</button>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<div class="wrap">
+  <aside id="painel">
+    <h3>Buscar</h3>
+    <input type="text" id="q" placeholder="palavra, órgão, cidade…">
+
+    <h3>Região (obras)</h3>
+    <label class="ck"><input type="checkbox" class="reg" value="CONVALES" checked> Municípios do CONVALES</label>
+    <label class="ck"><input type="checkbox" class="reg" value="RN" checked> Rio Grande do Norte (todo)</label>
+    <label class="ck"><input type="checkbox" class="reg" value="Brasília" checked> Raio de Brasília</label>
+    <label class="ck"><input type="checkbox" class="reg" value="Brasilândia de Minas" checked> Raio de Brasilândia de Minas</label>
+    <div class="range"><span>Raio</span><input type="range" id="raio" min="25" max="150" step="25" value="150"><b id="raioV">150 km</b></div>
+
+    <h3>Estado</h3>
+    <select id="uf"><option value="">Todos</option></select>
+
+    <h3>Cidade</h3>
+    <input type="text" id="cidade" placeholder="ex.: Unaí">
+
+    <h3>Esfera</h3>
+    <select id="esfera"><option value="">Todas</option><option>Municipal</option><option>Estadual</option><option>Federal</option><option>Distrital</option></select>
+
+    <h3>Modalidade</h3>
+    <select id="modalidade"><option value="">Todas</option></select>
+
+    <h3>Valor estimado (R$)</h3>
+    <div class="row"><input type="number" id="vmin" placeholder="mín."><input type="number" id="vmax" placeholder="máx."></div>
+
+    <h3>Prazo</h3>
+    <select id="prazo">
+      <option value="">Qualquer data</option>
+      <option value="3">Encerra em até 3 dias</option>
+      <option value="7">Encerra em até 7 dias</option>
+      <option value="15">Encerra em até 15 dias</option>
+      <option value="30">Encerra em até 30 dias</option>
+      <option value="min5">Pelo menos 5 dias para preparar</option>
+      <option value="min7">Pelo menos 7 dias para preparar</option>
+    </select>
+
+    <h3>Marcações</h3>
+    <label class="ck"><input type="checkbox" id="soNovos"> Só os novos desta atualização</label>
+    <label class="ck"><input type="checkbox" id="soFav"> Só as favoritas ★</label>
+    <label class="ck"><input type="checkbox" id="verDesc"> Mostrar descartadas</label>
+    <label class="ck"><input type="checkbox" id="semAlerta"> Esconder as que têm alerta</label>
+
+    <button class="btn full" id="limpar">Limpar filtros</button>
+    <button class="btn full" id="fechar" style="display:none">Fechar</button>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <span class="count" id="count"></span>
+      <div class="grow"></div>
+      <select id="ordem" style="width:auto">
+        <option value="enc">Prazo mais próximo</option>
+        <option value="valor">Maior valor</option>
+        <option value="pub">Publicação mais recente</option>
+        <option value="dist">Mais perto da base</option>
+      </select>
+      <div class="seg"><button id="vLista" class="on">Lista</button><button id="vMapa">Mapa</button></div>
+      <button class="btn" id="csv">Baixar Excel (CSV)</button>
+    </div>
+    <div id="lista" class="list"></div>
+    <button class="btn mais" id="mais" style="display:none">Mostrar mais</button>
+    <div id="mapa" style="display:none"></div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const store = {
+  get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
+};
+let DADOS = null, trilha = store.get('trilha', 'todas'), limite = 60, vista = 'lista', mapa = null, camada = null;
+const fav = new Set(store.get('fav', [])), desc = new Set(store.get('desc', []));
+const brl = v => v ? v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0}) : 'sigiloso';
+const dt = s => s ? new Date(s).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—';
+const dias = s => s ? Math.ceil((new Date(s) - Date.now()) / 864e5) : null;
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sem = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+(function tema(){
+  const t = store.get('tema', null); if (t) document.documentElement.dataset.theme = t;
+  $('#tema').onclick = () => {
+    const escuro = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === '#0f1520';
+    const novo = escuro ? 'light' : 'dark'; document.documentElement.dataset.theme = novo; store.set('tema', novo);
+  };
+})();
+
+fetch('dados.json?' + Date.now()).then(r => r.json()).then(d => {
+  DADOS = d;
+  const at = new Date(d.atualizado_em);
+  $('#stamp').textContent = `Atualizado ${at.toLocaleDateString('pt-BR')} às ${at.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} · ${d.total_pncp.toLocaleString('pt-BR')} abertas no PNCP · fonte: PNCP${d.falhas ? ` · ⚠ ${d.falhas} página(s) do PNCP não responderam` : ''}`;
+  const ufs = [...new Set(d.itens.map(i => i.uf))].sort();
+  $('#uf').innerHTML += ufs.map(u => `<option>${u}</option>`).join('');
+  const mods = [...new Set(d.itens.map(i => i.modalidade))].sort();
+  $('#modalidade').innerHTML += mods.map(m => `<option>${esc(m)}</option>`).join('');
+  restaurar(); render();
+}).catch(() => { $('#lista').innerHTML = '<div class="vazio">Não consegui carregar os dados. Tente recarregar a página.</div>' });
+
+const CAMPOS = ['q','uf','cidade','esfera','modalidade','vmin','vmax','prazo','ordem','raio'];
+const CHECKS = ['soNovos','soFav','verDesc','semAlerta'];
+function salvar(){
+  const f = {}; CAMPOS.forEach(c => f[c] = $('#'+c).value); CHECKS.forEach(c => f[c] = $('#'+c).checked);
+  f.reg = $$('.reg').filter(x => x.checked).map(x => x.value); store.set('filtros', f);
+}
+function restaurar(){
+  const f = store.get('filtros', null); if (!f) return;
+  CAMPOS.forEach(c => { if (f[c] != null) $('#'+c).value = f[c] }); CHECKS.forEach(c => $('#'+c).checked = !!f[c]);
+  if (f.reg) $$('.reg').forEach(x => x.checked = f.reg.includes(x.value));
+}
+
+function regiaoOk(i){
+  if (!i.trilhas.includes('obras') || i.trilhas.some(t => t !== 'obras') && trilha !== 'obras') return true;
+  const reg = $$('.reg').filter(x => x.checked).map(x => x.value), raio = +$('#raio').value;
+  if (reg.includes('CONVALES') && i.convales) return true;
+  if (reg.includes('RN') && i.uf === 'RN') return true;
+  return reg.some(b => i.distancias[b] != null && i.distancias[b] <= raio && b !== 'CONVALES' && b !== 'RN');
+}
+
+function filtrar(){
+  const q = sem($('#q').value), cid = sem($('#cidade').value), uf = $('#uf').value, esf = $('#esfera').value,
+        mod = $('#modalidade').value, vmin = +$('#vmin').value || 0, vmax = +$('#vmax').value || 0, pz = $('#prazo').value;
+  return DADOS.itens.filter(i => {
+    if (trilha !== 'todas' && !i.trilhas.includes(trilha)) return false;
+    if (!regiaoOk(i)) return false;
+    if (uf && i.uf !== uf) return false;
+    if (esf && i.esfera !== esf) return false;
+    if (mod && i.modalidade !== mod) return false;
+    if (cid && !sem(i.municipio).includes(cid)) return false;
+    if (vmin && i.valor < vmin) return false;
+    if (vmax && i.valor > vmax) return false;
+    const d = dias(i.encerramento);
+    if (pz.startsWith('min')) { if (d != null && d < +pz.slice(3)) return false }
+    else if (pz && (d == null || d > +pz)) return false;
+    if ($('#soNovos').checked && !i.novo) return false;
+    if ($('#soFav').checked && !fav.has(i.id)) return false;
+    if (!$('#verDesc').checked && desc.has(i.id)) return false;
+    if ($('#semAlerta').checked && i.alertas.length) return false;
+    if (q && !sem([i.objeto, i.orgao, i.unidade, i.municipio, i.numero].join(' ')).includes(q)) return false;
+    return true;
+  }).sort(ordenar);
+}
+function ordenar(a, b){
+  const o = $('#ordem').value;
+  if (o === 'valor') return (b.valor || 0) - (a.valor || 0);
+  if (o === 'pub') return (b.publicacao || '').localeCompare(a.publicacao || '');
+  if (o === 'dist') { const m = i => Math.min(...Object.values(i.distancias || {}), 1e9); return m(a) - m(b) }
+  return (a.encerramento || '9').localeCompare(b.encerramento || '9');
+}
+
+function tabs(){
+  const base = DADOS.itens.filter(regiaoOk).filter(i => $('#verDesc').checked || !desc.has(i.id));
+  const t = [['todas','Todas', base.length], ...Object.entries(DADOS.trilhas).map(([k, n]) => [k, n, base.filter(i => i.trilhas.includes(k)).length])];
+  $('#tabs').innerHTML = t.map(([k, n, c]) => `<button class="tab ${k === trilha ? 'on' : ''}" data-k="${k}">${n}<b>${c}</b></button>`).join('');
+  $$('.tab').forEach(b => b.onclick = () => { trilha = b.dataset.k; store.set('trilha', trilha); limite = 60; render() });
+}
+
+function card(i){
+  const d = dias(i.encerramento), cls = d != null && d <= 3 ? 'r' : d != null && d <= 7 ? 'a' : '';
+  const prazo = d == null ? 'sem data' : d < 0 ? 'encerrada' : d === 0 ? 'encerra hoje' : `${d} dia${d > 1 ? 's' : ''}`;
+  return `<article class="card ${i.trilhas[0]} ${desc.has(i.id) ? 'descartada' : ''}" data-id="${esc(i.id)}">
+    <div class="top">
+      ${i.novo ? '<span class="tag novo">NOVO</span>' : ''}
+      ${i.trilhas.map(t => `<span class="tag t-${t}">${esc(DADOS.trilhas[t])}</span>`).join('')}
+      <span class="tag prazo ${cls}">⏱ ${prazo}</span>
+      ${i.regiao.map(r => `<span class="tag">${esc(r)}</span>`).join('')}
+    </div>
+    <div class="obj" title="clique para ver tudo">${esc(i.objeto)}</div>
+    <div class="meta">
+      <span><b>${esc(i.municipio)}/${esc(i.uf)}</b> · ${esc(i.orgao)}</span>
+      <span>Valor: <b>${brl(i.valor)}</b></span>
+      <span>${esc(i.modalidade)} ${esc(i.numero)}${i.srp ? ' · SRP' : ''}</span>
+      <span>Propostas: ${dt(i.abertura_propostas)} até <b>${dt(i.encerramento)}</b></span>
+    </div>
+    ${i.alertas.map(a => `<div class="alert">⚠ ${esc(a)}</div>`).join('')}
+    <div class="acts">
+      <a href="${esc(i.pncp)}" target="_blank" rel="noopener">Edital no PNCP</a>
+      ${i.plataforma ? `<a href="${esc(i.plataforma)}" target="_blank" rel="noopener">Plataforma</a>` : ''}
+      <button class="fav ${fav.has(i.id) ? 'on' : ''}" data-a="fav">★ ${fav.has(i.id) ? 'Favorita' : 'Favoritar'}</button>
+      <button data-a="desc">${desc.has(i.id) ? 'Restaurar' : 'Descartar'}</button>
+      <button data-a="copiar">Copiar resumo</button>
+    </div>
+  </article>`;
+}
+
+function render(){
+  salvar(); tabs();
+  $('#raioV').textContent = $('#raio').value + ' km';
+  const itens = filtrar();
+  $('#count').textContent = `${itens.length.toLocaleString('pt-BR')} licitaç${itens.length === 1 ? 'ão' : 'ões'}`;
+  if (vista === 'mapa') { desenharMapa(itens); return }
+  $('#lista').innerHTML = itens.length ? itens.slice(0, limite).map(card).join('')
+    : '<div class="vazio">Nenhuma licitação com esses filtros.</div>';
+  $('#mais').style.display = itens.length > limite ? 'block' : 'none';
+}
+
+$('#lista').addEventListener('click', e => {
+  const c = e.target.closest('.card'); if (!c) return;
+  const id = c.dataset.id, a = e.target.dataset.a;
+  if (a === 'fav') { fav.has(id) ? fav.delete(id) : fav.add(id); store.set('fav', [...fav]); render() }
+  else if (a === 'desc') { desc.has(id) ? desc.delete(id) : desc.add(id); store.set('desc', [...desc]); render() }
+  else if (a === 'copiar') {
+    const i = DADOS.itens.find(x => x.id === id);
+    const txt = `${i.municipio}/${i.uf} – ${i.orgao}\n${i.objeto}\n${i.modalidade} ${i.numero} · ${brl(i.valor)}\nPropostas até ${dt(i.encerramento)}\n${i.pncp}`;
+    navigator.clipboard?.writeText(txt).then(() => { e.target.textContent = 'Copiado ✓' });
+  }
+  else if (e.target.classList.contains('obj')) c.classList.toggle('aberto');
+});
+
+function desenharMapa(itens){
+  if (!window.L) { $('#mapa').innerHTML = '<div class="vazio">O mapa não carregou (sem internet?).</div>'; return }
+  if (!mapa) {
+    mapa = L.map('mapa').setView([-12.5, -45], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18, attribution: '© OpenStreetMap'}).addTo(mapa);
+  }
+  setTimeout(() => mapa.invalidateSize(), 50);
+  if (camada) camada.remove();
+  camada = L.layerGroup().addTo(mapa);
+  const raio = +$('#raio').value;
+  DADOS.bases.forEach(b => L.circle([b.lat, b.lng], {radius: raio * 1000, color: '#e8792b', weight: 1.5, fillOpacity: .06}).bindTooltip(`${b.nome}: ${raio} km`).addTo(camada));
+  const cor = {obras: '#1f5d99', limpeza_urbana: '#2f8a4f', mao_de_obra: '#8a4fb0'};
+  itens.filter(i => i.lat != null).forEach(i => {
+    const jit = () => (Math.random() - .5) * .04;
+    L.circleMarker([i.lat + jit(), i.lng + jit()], {radius: 6, color: '#fff', weight: 1, fillColor: cor[i.trilhas[0]], fillOpacity: .9})
+      .bindPopup(`<b>${esc(i.municipio)}/${esc(i.uf)}</b><br>${esc(i.objeto.slice(0, 180))}${i.objeto.length > 180 ? '…' : ''}<br>${brl(i.valor)} · até ${dt(i.encerramento)}<br><a href="${esc(i.pncp)}" target="_blank">Edital no PNCP</a>`)
+      .addTo(camada);
+  });
+}
+
+function csv(){
+  const itens = filtrar(), q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+  const cab = ['Trilha','Município','UF','Órgão','Objeto','Modalidade','Número','Valor estimado','Abertura propostas','Encerramento','Região','Alertas','Edital PNCP','Plataforma'];
+  const linhas = itens.map(i => [i.trilhas.map(t => DADOS.trilhas[t]).join(' / '), i.municipio, i.uf, i.orgao, i.objeto, i.modalidade, i.numero,
+    (i.valor || 0).toFixed(2).replace('.', ','), dt(i.abertura_propostas), dt(i.encerramento), i.regiao.join(' | '), i.alertas.join(' | '), i.pncp, i.plataforma].map(q).join(';'));
+  const blob = new Blob(['﻿' + [cab.map(q).join(';'), ...linhas].join('\r\n')], {type: 'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `Radar Rhema ${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+}
+
+[...CAMPOS.map(c => '#' + c), ...CHECKS.map(c => '#' + c)].forEach(s => $(s).addEventListener('input', () => { limite = 60; render() }));
+$$('.reg').forEach(x => x.addEventListener('change', render));
+$('#mais').onclick = () => { limite += 60; render() };
+$('#vLista').onclick = () => { vista = 'lista'; $('#vLista').classList.add('on'); $('#vMapa').classList.remove('on'); $('#mapa').style.display = 'none'; $('#lista').style.display = ''; render() };
+$('#vMapa').onclick = () => { vista = 'mapa'; $('#vMapa').classList.add('on'); $('#vLista').classList.remove('on'); $('#mapa').style.display = 'block'; $('#lista').style.display = 'none'; $('#mais').style.display = 'none'; render() };
+$('#csv').onclick = csv;
+$('#limpar').onclick = () => {
+  CAMPOS.forEach(c => $('#'+c).value = ''); $('#ordem').value = 'enc'; $('#raio').value = 150;
+  CHECKS.forEach(c => $('#'+c).checked = false); $$('.reg').forEach(x => x.checked = true); render();
+};
+$('#abrirFiltros').onclick = () => { $('#painel').classList.add('open'); $('#fechar').style.display = 'block' };
+$('#fechar').onclick = () => $('#painel').classList.remove('open');
+</script>
+</body>
+</html>

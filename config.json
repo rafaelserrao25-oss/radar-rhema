@@ -1,0 +1,98 @@
+{
+  "_leia": "Configuração do Radar Rhema. Para mudar o funil, edite aqui (palavras, raio, municípios) e rode de novo. Textos são comparados sem acento e sem maiúscula.",
+
+  "bases": [
+    { "nome": "Brasília", "uf": "DF", "raio_km": 150 },
+    { "nome": "Brasilândia de Minas", "uf": "MG", "raio_km": 150 }
+  ],
+
+  "ufs_inteiras_para_obras": ["RN"],
+
+  "convales": {
+    "cnpj": "06070075000125",
+    "municipios": [
+      ["Água Fria de Goiás", "GO"], ["Arinos", "MG"], ["Bonfinópolis de Minas", "MG"], ["Buritis", "MG"],
+      ["Brasilândia de Minas", "MG"], ["Cabeceiras", "GO"], ["Cabeceira Grande", "MG"], ["Chapada Gaúcha", "MG"],
+      ["Cocalzinho de Goiás", "GO"], ["Dom Bosco", "MG"], ["Formoso", "MG"], ["Guarda-Mor", "MG"],
+      ["Mimoso de Goiás", "GO"], ["Natalândia", "MG"], ["João Pinheiro", "MG"], ["Lagoa Grande", "MG"],
+      ["Paracatu", "MG"], ["Riachinho", "MG"], ["Santa Fé de Minas", "MG"], ["Unaí", "MG"],
+      ["Uruana de Minas", "MG"], ["Urucuia", "MG"], ["Vazante", "MG"]
+    ]
+  },
+
+  "modalidades": {
+    "4": "Concorrência eletrônica",
+    "5": "Concorrência presencial",
+    "6": "Pregão eletrônico",
+    "7": "Pregão presencial",
+    "8": "Dispensa",
+    "11": "Pré-qualificação",
+    "12": "Credenciamento"
+  },
+
+  "trilhas": {
+    "obras": {
+      "nome": "Obras",
+      "abrangencia": "regiao",
+      "palavras": [
+        "paralelepipedo", "calcamento", "intertravado", "bloquete", "meio-fio", "meio fio", "meios-fios",
+        "guia e sarjeta", "sarjeta", "drenagem", "galeria pluvial", "aguas pluviais", "pavimentacao",
+        "passeio publico", "calcada", "terraplenagem", "estrada vicinal", "estradas vicinais", "cascalhamento",
+        "obra", "obras", "construcao", "reforma", "ampliacao", "revitalizacao", "requalificacao",
+        "creche", "escola", "unidade basica de saude", "ubs", "quadra", "praca", "muro", "edificacao",
+        "urbanizacao", "ponte", "bueiro", "rede de esgoto", "abastecimento de agua", "reservatorio"
+      ]
+    },
+    "limpeza_urbana": {
+      "nome": "Limpeza urbana",
+      "abrangencia": "brasil",
+      "palavras": [
+        "limpeza urbana", "limpeza publica", "coleta de residuos", "coleta de lixo", "coleta domiciliar",
+        "coleta e transporte de residuos", "residuos solidos urbanos", "varricao", "rocada", "rocagem", "capina",
+        "poda", "remocao de entulho", "recolhimento de entulho", "residuos da construcao civil", "rcc",
+        "limpeza de vias", "limpeza de logradouros", "ecoponto", "transbordo", "conservacao de areas verdes"
+      ]
+    },
+    "mao_de_obra": {
+      "nome": "Mão de obra terceirizada",
+      "abrangencia": "brasil",
+      "palavras": [
+        "limpeza e conservacao", "conservacao e limpeza", "limpeza predial", "servicos de limpeza",
+        "copeiragem", "copeira", "portaria", "porteiro", "recepcao", "recepcionista", "zeladoria",
+        "jardinagem", "servicos continuos com dedicacao exclusiva", "dedicacao exclusiva de mao de obra",
+        "mao de obra terceirizada", "terceirizacao de mao de obra", "postos de trabalho", "apoio administrativo",
+        "auxiliar de servicos gerais", "servicos gerais", "manutencao predial"
+      ]
+    }
+  },
+
+  "exclusoes": [
+    "asfalto", "asfaltic", "cbuq", "concreto betuminoso", "tsd", "tratamento superficial", "recapeamento",
+    "tapa-buraco", "tapa buraco", "fresagem", "lama asfaltica", "pmf", "micro revestimento", "microrrevestimento",
+    "aterro sanitario", "tratamento de residuos", "disposicao final", "residuos de servicos de saude", "residuos hospitalares",
+    "residuos infectantes", "aquisicao de", "aquisicoes de", "fornecimento de material", "fornecimento de materiais",
+    "materiais de construcao", "material de construcao", "material de limpeza", "materiais de limpeza",
+    "produtos de limpeza", "generos alimenticios", "merenda", "medicamento", "combustivel",
+    "locacao de imovel", "credenciamento de medicos", "uniformes", "limpeza de fossa", "fossas",
+    "rodovia", "rodovias", "engenharia clinica", "vigilancia", "dedetizacao", "desratizacao",
+    "vale alimentacao", "vale refeicao", "impressao", "graficos", "pecas", "caminhao-pipa", "caminhao pipa",
+    "pessoa fisica", "pessoas fisicas", "elaboracao de projeto", "elaboracao de projetos",
+    "cisternas", "higienizacao de reservatorios", "lavanderia", "hospitalar", "alimentacao escolar"
+  ],
+
+  "alertas": [
+    { "se": ["dedicacao exclusiva", "postos de trabalho", "cessao de mao de obra", "terceirizacao de mao de obra", "apoio administrativo"],
+      "texto": "Terceirização com dedicação exclusiva: costuma exigir 3 anos de experiência; cessão de mão de obra é vedada no Simples. Conferir." },
+    { "se": ["pre-qualificacao", "pre qualificacao", "pre-qualificados"],
+      "texto": "Pré-qualificação: só participa quem for pré-qualificado (lição de Alexandria/RN)." },
+    { "se": ["registro de precos", "srp"],
+      "texto": "Registro de preços: ata, sem garantia de contratação." },
+    { "se": ["projeto basico", "projeto executivo", "contratacao integrada", "semi-integrada"],
+      "texto": "Inclui elaboração de projeto: conferir exigência técnica de projeto." },
+    { "se": ["intertravado"],
+      "texto": "Intertravado: o maior atestado do Eng. Bruno é 207 m² (Senador Georgino). Conferir quantitativo." }
+  ],
+
+  "valor_minimo": 0,
+  "valor_maximo": 0
+}
