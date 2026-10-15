@@ -129,11 +129,12 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
     <h3>Buscar</h3>
     <input type="text" id="q" placeholder="palavra, órgão, cidade…">
 
-    <h3>Região (obras)</h3>
+    <h3>Região</h3>
     <label class="ck"><input type="checkbox" class="reg" value="CONVALES" checked> Municípios do CONVALES</label>
     <label class="ck"><input type="checkbox" class="reg" value="RN" checked> Rio Grande do Norte (todo)</label>
     <label class="ck"><input type="checkbox" class="reg" value="Brasília" checked> Raio de Brasília</label>
     <label class="ck"><input type="checkbox" class="reg" value="Brasilândia de Minas" checked> Raio de Brasilândia de Minas</label>
+    <label class="ck"><input type="checkbox" class="reg" value="BRASIL" checked> Brasil todo (limpeza e mão de obra)</label>
     <div class="range"><span>Raio</span><input type="range" id="raio" min="25" max="150" step="25" value="150"><b id="raioV">150 km</b></div>
 
     <h3>Estado</h3>
@@ -239,10 +240,10 @@ const CAMPOS = ['q','uf','cidade','esfera','modalidade','vmin','vmax','prazo','o
 const CHECKS = ['soNovos','soFav','verDesc','semAlerta'];
 function salvar(){
   const f = {}; CAMPOS.forEach(c => f[c] = $('#'+c).value); CHECKS.forEach(c => f[c] = $('#'+c).checked);
-  f.reg = $$('.reg').filter(x => x.checked).map(x => x.value); store.set('filtros', f);
+  f.reg = $$('.reg').filter(x => x.checked).map(x => x.value); store.set('filtros2', f);
 }
 function restaurar(){
-  const f = store.get('filtros', null); if (!f) return;
+  const f = store.get('filtros2', null); if (!f) return;
   CAMPOS.forEach(c => { if (f[c] != null) $('#'+c).value = f[c] }); CHECKS.forEach(c => $('#'+c).checked = !!f[c]);
   if (f.reg) $$('.reg').forEach(x => x.checked = f.reg.includes(x.value));
 }
@@ -255,12 +256,14 @@ function baseOk(i){
   return true;
 }
 
+// Região vale para todas as trilhas. "Brasil todo" libera limpeza e mão de obra fora das regiões
+// (obras já chegam só das regiões, pelo funil do robô).
 function regiaoOk(i){
-  if (!i.trilhas.includes('obras') || i.trilhas.some(t => t !== 'obras') && trilha !== 'obras') return true;
   const reg = $$('.reg').filter(x => x.checked).map(x => x.value), raio = +$('#raio').value;
   if (reg.includes('CONVALES') && i.convales) return true;
   if (reg.includes('RN') && i.uf === 'RN') return true;
-  return reg.some(b => i.distancias[b] != null && i.distancias[b] <= raio && b !== 'CONVALES' && b !== 'RN');
+  if (['Brasília', 'Brasilândia de Minas'].some(b => reg.includes(b) && i.distancias[b] != null && i.distancias[b] <= raio)) return true;
+  return reg.includes('BRASIL') && trilha !== 'obras' && i.trilhas.some(t => t !== 'obras');
 }
 
 function filtrar(){
