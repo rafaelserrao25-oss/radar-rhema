@@ -8,6 +8,9 @@ Destinos no segredo WHATSAPP_DESTINOS do GitHub, no formato
     5584999999999:APIKEY;5561988888888:OUTRAKEY
 (cada pessoa ativa o próprio número no CallMeBot e recebe a própria APIKEY).
 
+Telegram: segredos TELEGRAM_TOKEN (do @BotFather) e TELEGRAM_DESTINOS
+(ids de conversa separados por vírgula; cada pessoa manda /start ao robô).
+
 Teste sem enviar:  python avisar.py --teste
 """
 import json
@@ -95,6 +98,21 @@ def enviar(texto, destinos):
             print(corpo[:300].replace(chave, "***"))
 
 
+def enviar_telegram(texto, token, chats):
+    for chat in chats:
+        dados = urllib.parse.urlencode({
+            "chat_id": chat, "text": texto.replace("*", ""),
+            "disable_web_page_preview": "true"}).encode()
+        try:
+            with urllib.request.urlopen(
+                    f"https://api.telegram.org/bot{token}/sendMessage", dados, timeout=60) as r:
+                ok = json.loads(r.read().decode("utf-8")).get("ok", False)
+            erro = ""
+        except Exception as e:
+            ok, erro = False, str(e).replace(token, "***")
+        print(f"Telegram para {chat}: {'enviado' if ok else 'FALHOU ' + erro[:200]}")
+
+
 def main():
     cfg = json.loads((RAIZ / "config.json").read_text(encoding="utf-8")).get("aviso_whatsapp", {})
     dados = json.loads((RAIZ / "docs" / "dados.json").read_text(encoding="utf-8"))
@@ -110,10 +128,14 @@ def main():
         return
     bruto = os.environ.get("WHATSAPP_DESTINOS", "").strip()
     destinos = [tuple(p.strip().split(":", 1)) for p in bruto.split(";") if ":" in p]
-    if not destinos:
-        print("Segredo WHATSAPP_DESTINOS vazio: aviso não enviado.")
-        return
-    enviar(texto, destinos)
+    token = os.environ.get("TELEGRAM_TOKEN", "").strip()
+    chats = [c.strip() for c in os.environ.get("TELEGRAM_DESTINOS", "").replace(";", ",").split(",") if c.strip()]
+    if destinos:
+        enviar(texto, destinos)
+    if token and chats:
+        enviar_telegram(texto, token, chats)
+    if not destinos and not (token and chats):
+        print("Nenhum destino cadastrado (WhatsApp ou Telegram): aviso não enviado.")
 
 
 if __name__ == "__main__":
