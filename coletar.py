@@ -100,6 +100,7 @@ def main():
     exclusao = padrao(cfg["exclusoes"])
     alertas = [(padrao(a["se"]), a["texto"]) for a in cfg["alertas"]]
     vmin, vmax = cfg.get("valor_minimo") or 0, cfg.get("valor_maximo") or 0
+    corte = cfg.get("publicado_a_partir_de") or ""
 
     cache = RAIZ / "bruto.json.gz"
     if "--sem-baixar" in sys.argv and cache.exists():
@@ -118,6 +119,8 @@ def main():
         if chave in vistos:
             continue
         vistos.add(chave)
+        if corte and (c.get("dataPublicacaoPncp") or "")[:10] < corte:
+            continue
         # trilhas olham só o objeto; o campo complementar traz muito texto genérico
         texto = norm(c.get("objetoCompra") or "")
         if exclusao.search(texto):
@@ -202,6 +205,7 @@ def main():
     destino.write_text(json.dumps({
         "atualizado_em": agora,
         "total_pncp": len(vistos),
+        "publicado_a_partir_de": corte,
         "falhas": falhas,
         "trilhas": {k: t["nome"] for k, t in cfg["trilhas"].items()},
         "bases": [{"nome": n, "lat": p[0], "lng": p[1], "raio_km": r} for n, p, r in bases],

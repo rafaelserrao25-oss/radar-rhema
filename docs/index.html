@@ -82,6 +82,27 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
 .vazio{padding:40px;text-align:center;color:var(--muted);background:var(--card);border-radius:12px;border:1px dashed var(--line)}
 .mais{margin:12px auto 0;display:block}
 .filtros-btn{display:none}
+.resumo{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.resumo h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.resumo h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.tile{background:var(--bg);border-radius:10px;padding:10px 12px}
+.tile .n{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.tile .l{font-size:12px;color:var(--muted)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:14px;margin-top:12px}
+.resumo table{width:100%;border-collapse:collapse;font-size:13px}
+.resumo th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--line)}
+.resumo td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.resumo td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.resumo td.dt{white-space:nowrap;font-variant-numeric:tabular-nums}
+.resumo tr.go{cursor:pointer}
+.resumo tr.go:hover td{background:var(--bg)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.mini{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.resumo .toggle{margin-left:auto;font-size:12px}
+.resumo.fechado .corpo{display:none}
+.card.flash{outline:2px solid var(--accent)}
+@media (max-width:860px){ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .cols{grid-template-columns:1fr} }
 @media (max-width:860px){
   .wrap{grid-template-columns:1fr;padding:10px 16px 40px}
   aside{position:fixed;inset:0 0 0 auto;width:min(340px,92vw);max-height:none;top:0;border-radius:0;z-index:2000;transform:translateX(105%);transition:transform .2s}
@@ -152,6 +173,16 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
   </aside>
 
   <main>
+    <section class="resumo" id="resumo">
+      <h2>Quadro resumo <small id="resumoSub"></small><button class="btn toggle" id="resumoBtn">Recolher</button></h2>
+      <div class="corpo">
+        <div class="tiles" id="tiles"></div>
+        <div class="cols">
+          <div><table><thead><tr><th>Trilha</th><th style="text-align:right">Qtde</th><th style="text-align:right">Valor estimado</th></tr></thead><tbody id="porTrilha"></tbody></table></div>
+          <div><table><thead><tr><th>Disputa</th><th>Licitação</th><th style="text-align:right">Valor</th></tr></thead><tbody id="agenda"></tbody></table></div>
+        </div>
+      </div>
+    </section>
     <div class="toolbar">
       <span class="count" id="count"></span>
       <div class="grow"></div>
@@ -216,6 +247,14 @@ function restaurar(){
   if (f.reg) $$('.reg').forEach(x => x.checked = f.reg.includes(x.value));
 }
 
+// Ponto de partida: só o que foi publicado a partir do corte e ainda não encerrou
+function baseOk(i){
+  const corte = DADOS.publicado_a_partir_de || '2026-09-30';
+  if ((i.publicacao || '').slice(0, 10) < corte) return false;
+  if (i.encerramento && new Date(i.encerramento) < Date.now()) return false;
+  return true;
+}
+
 function regiaoOk(i){
   if (!i.trilhas.includes('obras') || i.trilhas.some(t => t !== 'obras') && trilha !== 'obras') return true;
   const reg = $$('.reg').filter(x => x.checked).map(x => x.value), raio = +$('#raio').value;
@@ -228,6 +267,7 @@ function filtrar(){
   const q = sem($('#q').value), cid = sem($('#cidade').value), uf = $('#uf').value, esf = $('#esfera').value,
         mod = $('#modalidade').value, vmin = +$('#vmin').value || 0, vmax = +$('#vmax').value || 0, pz = $('#prazo').value;
   return DADOS.itens.filter(i => {
+    if (!baseOk(i)) return false;
     if (trilha !== 'todas' && !i.trilhas.includes(trilha)) return false;
     if (!regiaoOk(i)) return false;
     if (uf && i.uf !== uf) return false;
@@ -256,7 +296,7 @@ function ordenar(a, b){
 }
 
 function tabs(){
-  const base = DADOS.itens.filter(regiaoOk).filter(i => $('#verDesc').checked || !desc.has(i.id));
+  const base = DADOS.itens.filter(baseOk).filter(regiaoOk).filter(i => $('#verDesc').checked || !desc.has(i.id));
   const t = [['todas','Todas', base.length], ...Object.entries(DADOS.trilhas).map(([k, n]) => [k, n, base.filter(i => i.trilhas.includes(k)).length])];
   $('#tabs').innerHTML = t.map(([k, n, c]) => `<button class="tab ${k === trilha ? 'on' : ''}" data-k="${k}">${n}<b>${c}</b></button>`).join('');
   $$('.tab').forEach(b => b.onclick = () => { trilha = b.dataset.k; store.set('trilha', trilha); limite = 60; render() });
@@ -294,12 +334,57 @@ function render(){
   salvar(); tabs();
   $('#raioV').textContent = $('#raio').value + ' km';
   const itens = filtrar();
+  resumo(itens);
   $('#count').textContent = `${itens.length.toLocaleString('pt-BR')} licitaç${itens.length === 1 ? 'ão' : 'ões'}`;
   if (vista === 'mapa') { desenharMapa(itens); return }
   $('#lista').innerHTML = itens.length ? itens.slice(0, limite).map(card).join('')
     : '<div class="vazio">Nenhuma licitação com esses filtros.</div>';
   $('#mais').style.display = itens.length > limite ? 'block' : 'none';
 }
+
+const COR = {obras: 'var(--obras)', limpeza_urbana: 'var(--limpeza)', mao_de_obra: 'var(--mao)'};
+const curto = v => !v ? '—' : v >= 1e6 ? 'R$ ' + (v / 1e6).toLocaleString('pt-BR', {maximumFractionDigits: 1}) + ' mi'
+  : v >= 1e3 ? 'R$ ' + Math.round(v / 1e3).toLocaleString('pt-BR') + ' mil' : brl(v);
+const soma = l => l.reduce((s, i) => s + (i.valor || 0), 0);
+
+// Quadro resumo: segue os filtros e a aba escolhidos
+function resumo(itens){
+  const corte = (DADOS.publicado_a_partir_de || '2026-09-30').split('-').reverse().join('/');
+  $('#resumoSub').textContent = `publicadas desde ${corte} · ainda abertas`;
+  const em7 = itens.filter(i => { const d = dias(i.encerramento); return d != null && d >= 0 && d <= 7 });
+  $('#tiles').innerHTML = [
+    [itens.length.toLocaleString('pt-BR'), 'licitações abertas'],
+    [curto(soma(itens)), 'valor estimado somado'],
+    [em7.length.toLocaleString('pt-BR'), 'disputas nos próximos 7 dias'],
+    [itens.filter(i => i.novo).length.toLocaleString('pt-BR'), 'novas nesta atualização'],
+  ].map(([n, l]) => `<div class="tile"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  $('#porTrilha').innerHTML = Object.entries(DADOS.trilhas).map(([k, n]) => {
+    const l = itens.filter(i => i.trilhas.includes(k));
+    return `<tr><td><span class="dot" style="background:${COR[k]}"></span>${esc(n)}</td><td class="num">${l.length}</td><td class="num">${curto(soma(l))}</td></tr>`;
+  }).join('');
+  const prox = [...itens].filter(i => i.encerramento).sort((a, b) => a.encerramento.localeCompare(b.encerramento)).slice(0, 8);
+  $('#agenda').innerHTML = prox.length ? prox.map(i => `<tr class="go" data-id="${esc(i.id)}">
+      <td class="dt">${dt(i.encerramento)}</td>
+      <td><span class="dot" style="background:${COR[i.trilhas[0]]}"></span><b>${esc(i.municipio)}/${esc(i.uf)}</b> <span class="mini">${esc(i.objeto)}</span></td>
+      <td class="num">${curto(i.valor)}</td></tr>`).join('')
+    : '<tr><td colspan="3">Nenhuma disputa com esses filtros.</td></tr>';
+}
+$('#agenda').addEventListener('click', e => {
+  const tr = e.target.closest('tr.go'); if (!tr) return;
+  if (vista === 'mapa') $('#vLista').click();
+  const pos = filtrar().findIndex(i => i.id === tr.dataset.id);
+  if (pos >= limite) { limite = pos + 10; render() }
+  const c = [...document.querySelectorAll('.card')].find(x => x.dataset.id === tr.dataset.id);
+  if (c) { c.scrollIntoView({behavior: 'smooth', block: 'center'}); c.classList.add('flash'); setTimeout(() => c.classList.remove('flash'), 2000) }
+});
+(function(){
+  const fechado = store.get('resumoFechado', false);
+  if (fechado) { $('#resumo').classList.add('fechado'); $('#resumoBtn').textContent = 'Abrir' }
+  $('#resumoBtn').onclick = () => {
+    const f = $('#resumo').classList.toggle('fechado'); store.set('resumoFechado', f);
+    $('#resumoBtn').textContent = f ? 'Abrir' : 'Recolher';
+  };
+})();
 
 $('#lista').addEventListener('click', e => {
   const c = e.target.closest('.card'); if (!c) return;
