@@ -59,8 +59,8 @@
       "palavras": [
         "limpeza e conservacao", "conservacao e limpeza", "limpeza predial", "servicos de limpeza",
         "copeiragem", "copeira", "servicos de portaria", "porteiro", "servicos de recepcao", "recepcionista", "zeladoria",
-        "jardinagem", "servicos continuos com dedicacao exclusiva", "dedicacao exclusiva de mao de obra",
-        "mao de obra terceirizada", "terceirizacao de mao de obra", "postos de trabalho", "apoio administrativo",
+        "servicos de jardinagem", "mao de obra terceirizada", "terceirizacao de mao de obra",
+        "fornecimento de mao de obra", "apoio administrativo", "motoristas",
         "auxiliar de servicos gerais", "servicos gerais", "manutencao predial"
       ]
     }
@@ -77,7 +77,10 @@
     "rodovia", "rodovias", "engenharia clinica", "vigilancia", "dedetizacao", "desratizacao",
     "vale alimentacao", "vale refeicao", "impressao", "graficos", "pecas", "caminhao-pipa", "caminhao pipa",
     "pessoa fisica", "pessoas fisicas", "elaboracao de projeto", "elaboracao de projetos",
-    "cisternas", "higienizacao de reservatorios", "lavanderia", "hospitalar", "alimentacao escolar"
+    "cisternas", "higienizacao de reservatorios", "lavanderia", "hospitalar", "alimentacao escolar",
+    "sem regime de dedicacao exclusiva", "sem dedicacao exclusiva", "software", "assinatura", "licenciamento",
+    "nutricao", "alimentacao", "refeicoes", "coffee break", "saude ocupacional", "telefonista",
+    "mudas", "sementes", "grama", "vidros", "espelhos", "eventos"
   ],
 
   "alertas": [
