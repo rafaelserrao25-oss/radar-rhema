@@ -99,6 +99,9 @@
   "_publicado": "Ponto de partida do Radar (pedido do Rafael em 15/10/2026): só licitações publicadas no PNCP a partir desta data. Hoje menos 15 dias.",
   "publicado_a_partir_de": "2026-09-30",
 
+  "_aviso": "Aviso no WhatsApp (avisar.py) a cada coleta: licitações novas nas regiões (CONVALES, RN, raios). brasil_todo=true manda também as de limpeza e mão de obra do Brasil inteiro, item por item.",
+  "aviso_whatsapp": { "ligado": true, "brasil_todo": false, "max_itens": 12 },
+
   "valor_minimo": 0,
   "valor_maximo": 0
 }
