@@ -31,8 +31,10 @@ jobs:
           # se alguém mexeu no repositório durante a coleta, junta antes de gravar
           git pull --rebase -X theirs origin main
           git push
-      - name: Avisar no WhatsApp
+      - name: Avisar no WhatsApp e no Telegram
         continue-on-error: true
         env:
           WHATSAPP_DESTINOS: ${{ secrets.WHATSAPP_DESTINOS }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_DESTINOS: ${{ secrets.TELEGRAM_DESTINOS }}
         run: python avisar.py
