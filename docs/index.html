@@ -111,6 +111,20 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
   .tabs{padding:10px 16px 0}
   #mapa{height:65vh}
 }
+#impressao{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff !important;color:#000}
+  body > *:not(#impressao){display:none !important}
+  #impressao{display:block;font:10px/1.35 Arial,sans-serif;color:#000}
+  #impressao h1{font-size:15px;margin:0 0 2px}
+  #impressao .sub{font-size:10px;color:#444;margin-bottom:8px}
+  #impressao table{width:100%;border-collapse:collapse}
+  #impressao th,#impressao td{border:1px solid #999;padding:3px 4px;vertical-align:top;text-align:left}
+  #impressao th{background:#e8e8e8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #impressao tr{break-inside:avoid}
+  #impressao td.n{white-space:nowrap}
+}
 </style>
 </head>
 <body>
@@ -194,6 +208,7 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
         <option value="dist">Mais perto da base</option>
       </select>
       <div class="seg"><button id="vLista" class="on">Lista</button><button id="vMapa">Mapa</button></div>
+      <button class="btn" id="imprimir">Imprimir</button>
       <button class="btn" id="csv">Baixar Excel (CSV)</button>
     </div>
     <div id="lista" class="list"></div>
@@ -201,6 +216,7 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
     <div id="mapa" style="display:none"></div>
   </main>
 </div>
+<div id="impressao"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -433,12 +449,37 @@ function csv(){
   a.download = `Radar Rhema ${new Date().toISOString().slice(0, 10)}.csv`; a.click();
 }
 
+// Imprimir: só a lista filtrada, em tabela (A4 deitado; dá para salvar como PDF)
+function imprimir(){
+  const itens = filtrar(), sel = id => { const s = $('#'+id); return s.value ? s.options[s.selectedIndex].text : '' };
+  const reg = $$('.reg').filter(x => x.checked).map(x => x.parentNode.textContent.trim());
+  const filtros = [
+    trilha === 'todas' ? 'Todas as trilhas' : DADOS.trilhas[trilha],
+    reg.length && reg.length < $$('.reg').length ? 'Região: ' + reg.join(', ') : '',
+    $('#uf').value && 'UF: ' + $('#uf').value, $('#cidade').value && 'Cidade: ' + $('#cidade').value,
+    $('#q').value && 'Busca: "' + $('#q').value + '"', sel('esfera') && 'Esfera: ' + sel('esfera'),
+    sel('modalidade') && 'Modalidade: ' + sel('modalidade'), sel('prazo') && 'Prazo: ' + sel('prazo'),
+    $('#vmin').value && 'Valor mín.: ' + brl(+$('#vmin').value), $('#vmax').value && 'Valor máx.: ' + brl(+$('#vmax').value),
+    $('#soNovos').checked && 'Só novas', $('#soFav').checked && 'Só favoritas', $('#semAlerta').checked && 'Sem alertas'
+  ].filter(Boolean).join(' · ');
+  const total = itens.reduce((s, i) => s + (i.valor || 0), 0);
+  const at = new Date(DADOS.atualizado_em);
+  $('#impressao').innerHTML = `<h1>Radar Rhema · ${itens.length} licitaç${itens.length === 1 ? 'ão' : 'ões'} · ${brl(total)}</h1>
+    <div class="sub">Dados de ${at.toLocaleDateString('pt-BR')} às ${at.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} (PNCP) · impresso em ${new Date().toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})} · ${esc(filtros)}</div>
+    <table><thead><tr><th>#</th><th>Disputa</th><th>Cidade/UF</th><th>Órgão</th><th>Objeto</th><th>Modalidade</th><th>Valor</th><th>Alertas</th></tr></thead><tbody>
+    ${itens.map((i, n) => `<tr><td class="n">${n + 1}</td><td class="n">${dt(i.encerramento)}</td><td>${esc(i.municipio)}/${esc(i.uf)}</td><td>${esc(i.orgao)}</td>
+      <td>${esc(i.objeto)}</td><td>${esc(i.modalidade)} ${esc(i.numero)}</td><td class="n">${brl(i.valor)}</td><td>${esc(i.alertas.join('; '))}</td></tr>`).join('')}
+    </tbody></table>`;
+  window.print();
+}
+
 [...CAMPOS.map(c => '#' + c), ...CHECKS.map(c => '#' + c)].forEach(s => $(s).addEventListener('input', () => { limite = 60; render() }));
 $$('.reg').forEach(x => x.addEventListener('change', render));
 $('#mais').onclick = () => { limite += 60; render() };
 $('#vLista').onclick = () => { vista = 'lista'; $('#vLista').classList.add('on'); $('#vMapa').classList.remove('on'); $('#mapa').style.display = 'none'; $('#lista').style.display = ''; render() };
 $('#vMapa').onclick = () => { vista = 'mapa'; $('#vMapa').classList.add('on'); $('#vLista').classList.remove('on'); $('#mapa').style.display = 'block'; $('#lista').style.display = 'none'; $('#mais').style.display = 'none'; render() };
 $('#csv').onclick = csv;
+$('#imprimir').onclick = imprimir;
 $('#limpar').onclick = () => {
   CAMPOS.forEach(c => $('#'+c).value = ''); $('#ordem').value = 'enc'; $('#raio').value = 150;
   CHECKS.forEach(c => $('#'+c).checked = false); $$('.reg').forEach(x => x.checked = true); render();
