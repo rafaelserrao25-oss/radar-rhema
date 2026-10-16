@@ -260,6 +260,7 @@ function baseOk(i){
 // (obras já chegam só das regiões, pelo funil do robô).
 function regiaoOk(i){
   const reg = $$('.reg').filter(x => x.checked).map(x => x.value), raio = +$('#raio').value;
+  if (!reg.length) return true; // nenhuma região marcada = sem filtro de região
   if (reg.includes('CONVALES') && i.convales) return true;
   if (reg.includes('RN') && i.uf === 'RN') return true;
   if (['Brasília', 'Brasilândia de Minas'].some(b => reg.includes(b) && i.distancias[b] != null && i.distancias[b] <= raio)) return true;
