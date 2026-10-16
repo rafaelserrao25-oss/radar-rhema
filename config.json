@@ -58,6 +58,7 @@
       "abrangencia": "brasil",
       "palavras": [
         "limpeza e conservacao", "conservacao e limpeza", "limpeza predial", "servicos de limpeza",
+        "limpeza, asseio e conservacao", "asseio e conservacao", "limpeza e asseio", "servicos continuos de limpeza",
         "copeiragem", "copeira", "servicos de portaria", "porteiro", "servicos de recepcao", "recepcionista", "zeladoria",
         "servicos de jardinagem", "mao de obra terceirizada", "terceirizacao de mao de obra",
         "fornecimento de mao de obra", "apoio administrativo", "motoristas",
@@ -77,11 +78,17 @@
     "rodovia", "rodovias", "engenharia clinica", "vigilancia", "dedetizacao", "desratizacao",
     "vale alimentacao", "vale refeicao", "impressao", "graficos", "pecas", "caminhao-pipa", "caminhao pipa",
     "pessoa fisica", "pessoas fisicas", "elaboracao de projeto", "elaboracao de projetos",
-    "cisternas", "higienizacao de reservatorios", "lavanderia", "hospitalar", "alimentacao escolar",
+    "cisternas", "higienizacao de reservatorios", "reservatorios e caixas", "lavanderia", "hospitalar", "alimentacao escolar",
     "sem regime de dedicacao exclusiva", "sem dedicacao exclusiva", "software", "assinatura", "licenciamento",
     "nutricao", "alimentacao", "refeicoes", "coffee break", "saude ocupacional", "telefonista",
     "mudas", "sementes", "grama", "vidros", "espelhos", "eventos"
   ],
+
+  "_relevar": "Se o objeto tiver uma destas expressões de serviço com mão de obra, as exclusões de material abaixo não cortam (ex.: AGU/PI, limpeza com fornecimento de material, 16/10/2026).",
+  "relevar_exclusoes": {
+    "se": ["dedicacao exclusiva", "servicos continuos", "servicos continuados", "postos de trabalho", "prestacao de servicos"],
+    "relevar": ["fornecimento de material", "fornecimento de materiais", "material de limpeza", "materiais de limpeza", "produtos de limpeza"]
+  },
 
   "alertas": [
     { "se": ["dedicacao exclusiva", "postos de trabalho", "cessao de mao de obra", "terceirizacao de mao de obra", "apoio administrativo"],

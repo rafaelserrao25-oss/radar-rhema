@@ -98,6 +98,9 @@ def main():
     ufs_obras = set(cfg["ufs_inteiras_para_obras"])
     trilhas = {k: padrao(t["palavras"]) for k, t in cfg["trilhas"].items()}
     exclusao = padrao(cfg["exclusoes"])
+    # exclusões que não valem quando o objeto é serviço com mão de obra (ex.: "limpeza com fornecimento de material")
+    rel = cfg.get("relevar_exclusoes")
+    r = (padrao(rel["se"]), {norm(p) for p in rel["relevar"]}) if rel else None
     alertas = [(padrao(a["se"]), a["texto"]) for a in cfg["alertas"]]
     vmin, vmax = cfg.get("valor_minimo") or 0, cfg.get("valor_maximo") or 0
     corte = cfg.get("publicado_a_partir_de") or ""
@@ -123,7 +126,7 @@ def main():
             continue
         # trilhas olham só o objeto; o campo complementar traz muito texto genérico
         texto = norm(c.get("objetoCompra") or "")
-        if exclusao.search(texto):
+        if any(not (r and r[0].search(texto) and m.group(0) in r[1]) for m in exclusao.finditer(texto)):
             continue
         uo = c.get("unidadeOrgao") or {}
         ibge, uf = str(uo.get("codigoIbge") or ""), uo.get("ufSigla") or ""
