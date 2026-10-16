@@ -131,6 +131,7 @@ label.ck{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
   #impressao .tag{font-weight:400;font-size:10.5px;opacity:.85}
   #impressao .alerta{background:#fff4d6}
   #impressao .urg{color:#b00020;font-weight:700}
+  #impressao .ext{color:#555;font-size:9.5px}
   #impressao a{color:#0b57d0;word-break:break-all}
   #impressao .check{font-size:10.5px;padding:4px 2px 0;letter-spacing:.01em}
   #impressao .pb{break-before:page}
@@ -237,7 +238,11 @@ const store = {
 };
 let DADOS = null, trilha = store.get('trilha', 'todas'), limite = 60, vista = 'lista', mapa = null, camada = null;
 const fav = new Set(store.get('fav', [])), desc = new Set(store.get('desc', []));
-const brl = v => v ? v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0}) : 'sigiloso';
+const brl = v => v ? v.toLocaleString('pt-BR', {style:'currency', currency:'BRL', minimumFractionDigits:2, maximumFractionDigits:2}) : 'sigiloso';
+// "2,53 milhões", "1,2 milhão", "865 mil": para não confundir 2.530.000 com 2.530
+const extenso = v => !v ? '' : v >= 1e6 ? (v / 1e6).toLocaleString('pt-BR', {maximumFractionDigits: 2}) + (v < 2e6 ? ' milhão' : ' milhões')
+  : v >= 1e3 ? Math.round(v / 1e3).toLocaleString('pt-BR') + ' mil' : '';
+const valor = v => v ? brl(v) + (extenso(v) ? ` (${extenso(v)})` : '') : 'sigiloso';
 const dt = s => s ? new Date(s).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '—';
 const dias = s => s ? Math.ceil((new Date(s) - Date.now()) / 864e5) : null;
 const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -345,7 +350,7 @@ function card(i){
     <div class="obj" title="clique para ver tudo">${esc(i.objeto)}</div>
     <div class="meta">
       <span><b>${esc(i.municipio)}/${esc(i.uf)}</b> · ${esc(i.orgao)}</span>
-      <span>Valor: <b>${brl(i.valor)}</b></span>
+      <span>Valor: <b>${valor(i.valor)}</b></span>
       <span>${esc(i.modalidade)} ${esc(i.numero)}${i.srp ? ' · SRP' : ''}</span>
       <span>Propostas: ${dt(i.abertura_propostas)} até <b>${dt(i.encerramento)}</b></span>
     </div>
@@ -373,8 +378,7 @@ function render(){
 }
 
 const COR = {obras: 'var(--obras)', limpeza_urbana: 'var(--limpeza)', mao_de_obra: 'var(--mao)'};
-const curto = v => !v ? '—' : v >= 1e6 ? 'R$ ' + (v / 1e6).toLocaleString('pt-BR', {maximumFractionDigits: 1}) + ' mi'
-  : v >= 1e3 ? 'R$ ' + Math.round(v / 1e3).toLocaleString('pt-BR') + ' mil' : brl(v);
+const curto = v => !v ? '—' : v >= 1e3 ? 'R$ ' + extenso(v) : brl(v);
 const soma = l => l.reduce((s, i) => s + (i.valor || 0), 0);
 
 // Quadro resumo: segue os filtros e a aba escolhidos
@@ -423,7 +427,7 @@ $('#lista').addEventListener('click', e => {
   else if (a === 'desc') { desc.has(id) ? desc.delete(id) : desc.add(id); store.set('desc', [...desc]); render() }
   else if (a === 'copiar') {
     const i = DADOS.itens.find(x => x.id === id);
-    const txt = `${i.municipio}/${i.uf} – ${i.orgao}\n${i.objeto}\n${i.modalidade} ${i.numero} · ${brl(i.valor)}\nPropostas até ${dt(i.encerramento)}\n${i.pncp}`;
+    const txt = `${i.municipio}/${i.uf} – ${i.orgao}\n${i.objeto}\n${i.modalidade} ${i.numero} · ${valor(i.valor)}\nPropostas até ${dt(i.encerramento)}\n${i.pncp}`;
     navigator.clipboard?.writeText(txt).then(() => { e.target.textContent = 'Copiado ✓' });
   }
   else if (e.target.classList.contains('obj')) c.classList.toggle('aberto');
@@ -444,7 +448,7 @@ function desenharMapa(itens){
   itens.filter(i => i.lat != null).forEach(i => {
     const jit = () => (Math.random() - .5) * .04;
     L.circleMarker([i.lat + jit(), i.lng + jit()], {radius: 6, color: '#fff', weight: 1, fillColor: cor[i.trilhas[0]], fillOpacity: .9})
-      .bindPopup(`<b>${esc(i.municipio)}/${esc(i.uf)}</b><br>${esc(i.objeto.slice(0, 180))}${i.objeto.length > 180 ? '…' : ''}<br>${brl(i.valor)} · até ${dt(i.encerramento)}<br><a href="${esc(i.pncp)}" target="_blank">Edital no PNCP</a>`)
+      .bindPopup(`<b>${esc(i.municipio)}/${esc(i.uf)}</b><br>${esc(i.objeto.slice(0, 180))}${i.objeto.length > 180 ? '…' : ''}<br>${valor(i.valor)} · até ${dt(i.encerramento)}<br><a href="${esc(i.pncp)}" target="_blank">Edital no PNCP</a>`)
       .addTo(camada);
   });
 }
@@ -504,7 +508,7 @@ function imprimir(){
       <tr><th>Unidade compradora</th><td>${esc(i.unidade || '—')} · esfera ${esc(i.esfera || '—')}</td></tr>
       <tr><th>Modalidade / número</th><td>${esc(i.modalidade)} nº ${esc(i.numero)}${i.srp ? ' · Registro de preços (SRP)' : ''}</td></tr>
       <tr><th>Objeto</th><td>${esc(i.objeto)}</td></tr>
-      <tr><th>Valor estimado</th><td><b>${i.valor ? brl(i.valor) : 'sigiloso / não informado'}</b></td></tr>
+      <tr><th>Valor estimado</th><td><b>${i.valor ? valor(i.valor) : 'sigiloso / não informado'}</b></td></tr>
       <tr><th>Publicado no PNCP</th><td>${dtl(i.publicacao)}</td></tr>
       <tr><th>Propostas</th><td>de ${dtl(i.abertura_propostas)}<br>até <b>${dtl(i.encerramento)}</b>${falta(i.encerramento)}</td></tr>
       ${ondeFica(i) ? `<tr><th>Onde fica</th><td>${esc(ondeFica(i))}</td></tr>` : ''}
@@ -514,12 +518,12 @@ function imprimir(){
     </table>
     <div class="check">Coleta: ☐ Edital &nbsp; ☐ Termo de referência &nbsp; ☐ Planilhas e anexos &nbsp; ☐ Habilitação conferida &nbsp; Decisão: ☐ participa ☐ não participa &nbsp; Resp.: ________</div>
   </div>`;
-  $('#impressao').innerHTML = `<h1>Radar Rhema · ${itens.length} licitaç${itens.length === 1 ? 'ão' : 'ões'} · ${brl(total)}</h1>
+  $('#impressao').innerHTML = `<h1>Radar Rhema · ${itens.length} licitaç${itens.length === 1 ? 'ão' : 'ões'} · ${valor(total)}</h1>
     <div class="sub">Rhema Construções e Serviços · dados do PNCP de ${at.toLocaleDateString('pt-BR')} às ${at.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})} · gerado em ${hoje.toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}<br>Filtros: ${esc(filtros)}</div>
     <h3>Índice (ordem da tela)</h3>
     <table><thead><tr><th>#</th><th>Propostas até</th><th>Cidade/UF</th><th>Órgão</th><th>Trilha</th><th>Valor</th></tr></thead><tbody>
     ${itens.map((i, n) => `<tr><td class="n">${n + 1}</td><td class="n">${dt(i.encerramento)}${falta(i.encerramento)}</td><td>${esc(i.municipio)}/${esc(i.uf)}</td><td>${esc(i.orgao)}</td>
-      <td>${esc(nomeTrilhas(i))}</td><td class="n">${brl(i.valor)}</td></tr>`).join('')}
+      <td>${esc(nomeTrilhas(i))}</td><td class="n">${brl(i.valor)}${extenso(i.valor) ? `<br><span class="ext">${extenso(i.valor)}</span>` : ''}</td></tr>`).join('')}
     </tbody></table>
     <h3 class="pb">Fichas</h3>
     ${itens.map((i, n) => ficha(i, n + 1)).join('')}
