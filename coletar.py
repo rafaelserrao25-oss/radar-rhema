@@ -141,7 +141,7 @@ def main():
         na_regiao = (uf in ufs_obras or e_convales
                      or any(dist.get(n, 1e9) <= r for n, _, r in bases))
 
-        sem_mao = texto.replace("mao de obra", " ")
+        sem_mao = re.sub(r"mao[- ]de[- ]obra", " ", texto)
         achou = []
         for k, rx in trilhas.items():
             alvo = sem_mao if k == "obras" else texto
