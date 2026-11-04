@@ -3,10 +3,13 @@
 
   "bases": [
     { "nome": "Brasília", "uf": "DF", "raio_km": 150 },
-    { "nome": "Brasilândia de Minas", "uf": "MG", "raio_km": 150 }
+    { "nome": "Brasilândia de Minas", "uf": "MG", "raio_km": 150 },
+    { "nome": "Natal", "uf": "RN", "raio_km": 100 },
+    { "nome": "Lagoa de Pedras", "uf": "RN", "raio_km": 100 }
   ],
 
-  "ufs_inteiras_para_obras": ["RN"],
+  "_ufs": "Obras no RN só no raio de Natal e Lagoa de Pedras (Rafael, 04/11/2026). Antes era o RN inteiro.",
+  "ufs_inteiras_para_obras": [],
 
   "convales": {
     "cnpj": "06070075000125",
